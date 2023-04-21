@@ -70,7 +70,8 @@ class Dbjointpurchase extends Module
         return parent::install() &&
             $this->registerHook('displayHeader') &&
             $this->registerHook('displayBackOfficeHeader') &&
-            $this->registerHook('displayFooterProduct');
+            $this->registerHook('displayFooterProduct') &&
+            $this->registerHook('actionAdminControllerSetMedia');
     }
 
     public function uninstall()
@@ -429,5 +430,18 @@ class Dbjointpurchase extends Module
         }
 
         return $excludes;
+    }
+
+    /**
+     * Hook to charge JS file in back office (only in product pages)
+     */
+    public function hookActionAdminControllerSetMedia()
+    {
+        if($this->context->controller->controller_name != 'AdminProducts')
+        {
+            return;
+        }
+        
+        $this->context->controller->addJS($this->local_path . 'views/js/select_back.js');
     }
 }
