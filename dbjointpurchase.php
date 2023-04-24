@@ -27,6 +27,8 @@ use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 use PrestaShop\PrestaShop\Core\Product\ProductListingPresenter;
 use PrestaShop\PrestaShop\Adapter\Product\ProductColorsRetriever;
 
+use Language;
+
 class Dbjointpurchase extends Module
 {
     protected $config_form = false;
@@ -270,16 +272,24 @@ class Dbjointpurchase extends Module
         return $this->hookDisplayFooterProduct($params);
     }
 
-    public function getProductsGenerate($id_product)
+    public function getProductsGenerate($id_product, $id_lang=0)
     {
         $excludes = $this->getProductsExcludes();
 
         $products = [];
-        $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
+
+        // Si no tenemos especificado lenguaje, obtenemos el primero activo (normalmente el 1)
+        if(!$id_lang) {
+            $id_lang = Language::getIDs(true)[0];
+        }
+
+
+        $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default, pl.name
                 FROM " . _DB_PREFIX_ . "order_detail od 
                 LEFT JOIN " . _DB_PREFIX_ . "product_shop p ON od.product_id = p.id_product
                 " . Shop::addSqlAssociation('product', 'p') . "
                 " . Product::sqlStock('p', 0) . "
+                LEFT JOIN " . _DB_PREFIX_ . "product_lang pl ON od.product_id = pl.id_product
                 WHERE od.product_id > 0 
                     AND od.product_id <> '$id_product' 
                     AND od.id_order IN (SELECT id_order 
@@ -290,7 +300,11 @@ class Dbjointpurchase extends Module
                     AND p.available_for_order = 1  
                     AND p.visibility != 'none' 
                     AND p.price > 0
-                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
+                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)
+                    
+                    AND pl.id_lang = '".$id_lang."'";
+
+
         if (!empty($excludes)) {
             $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
         }
@@ -304,6 +318,7 @@ class Dbjointpurchase extends Module
                 $products[$row['id_category_default']][] = array(
                     'id_product' => $row['product_id'],
                     'price' => $row['price'],
+                    'name' => $row['name'],
                 );
             }
 
@@ -313,17 +328,19 @@ class Dbjointpurchase extends Module
             //$id_category_default = $product->id_category_default;
 
             // Si no hay productos relacionados en los pedidos buscamos el top ventas de la categoria asociada
-            $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
+            $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default, pl.name
                 FROM " . _DB_PREFIX_ . "order_detail od
                 LEFT JOIN " . _DB_PREFIX_ . "product p ON od.product_id = p.id_product
                 LEFT JOIN " . _DB_PREFIX_ . "product_shop ps ON od.product_id = ps.id_product
                 " . Shop::addSqlAssociation('product', 'p') . "
                 " . Product::sqlStock('p', 0) . "
+                LEFT JOIN " . _DB_PREFIX_ . "product_lang pl ON od.product_id = pl.id_product
                 WHERE ps.active = 1 
                     AND p.available_for_order = 1  
                     AND p.visibility != 'none' 
                     AND p.price > 0
-                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
+                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)
+                    AND pl.id_lang = '".$id_lang."'";
             if (!empty($excludes)) {
                 $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
             }
@@ -337,6 +354,7 @@ class Dbjointpurchase extends Module
                     $products[$key][] = array(
                         'id_product' => $row['product_id'],
                         'price' => $row['price'],
+                        'name' => $row['name'],
                     );
                 }
                 return $products;
