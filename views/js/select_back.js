@@ -18,3 +18,22 @@ $(document).ready(function() {
     tab.append(titulo);
     tab.append(container.append(contenido));
 
+    $(document).on('click', '.jointCheckbox', function() {
+
+        $.ajax({
+            type: 'POST',
+            url: controller_link,
+            dataType: 'json',
+            async: true,
+            data: {
+              ajax : true,
+              product : product,
+              value : this.value,
+              checked : this.checked
+            },
+            success: function(jsonData)
+            {
+            }
+        });
+    })
+});
