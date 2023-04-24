@@ -69,6 +69,9 @@ class Dbjointpurchase extends Module
     {
         Configuration::updateValue('DBJOINT_COLOR', '#2fb5d2');
         Configuration::updateValue('DBJOINT_EXCLUDE', '');
+
+        include(dirname(__FILE__).'/sql/install.php');
+        
         return parent::install() &&
             $this->registerHook('displayHeader') &&
             $this->registerHook('displayBackOfficeHeader') &&
@@ -78,6 +81,8 @@ class Dbjointpurchase extends Module
 
     public function uninstall()
     {
+        include(dirname(__FILE__).'/sql/uninstall.php');
+        
         return parent::uninstall();
     }
 
