@@ -465,6 +465,21 @@ class Dbjointpurchase extends Module
             return;
         }
         
+        $controller_link = $this->context->link->getModuleLink($this->name, 'save');
+
+        global $kernel;
+        $requestStack = $kernel->getContainer()->get('request_stack');
+        $request = $requestStack->getCurrentRequest();
+        $idProduct = $request->get('id');
+        $idLang = $this->context->language->id;
+
+        // Obtenemos los productos candidatos a ser elegidos
+        $products_cat = $this->getProductsGenerate($idProduct, $idLang);
+        Media::addJsDef([   'products_cat' => $products_cat, 
+                            'controller_link' => $controller_link, 
+                            'product' => $idProduct
+                        ]);
+
         $this->context->controller->addJS($this->local_path . 'views/js/select_back.js');
     }
 }
