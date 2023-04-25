@@ -3,7 +3,7 @@ $(document).ready(function() {
     
     let titulo = $('<h2>Comprados juntos habitualmente</h2>');
 
-    let container = $('<ul class="category-tree">'+product+'</ul>');
+    let container = $('<ul class="category-tree"></ul>');
 
     let contenido = "";
 
@@ -20,6 +20,8 @@ $(document).ready(function() {
 
     $(document).on('click', '.jointCheckbox', function() {
 
+        let checkbox = $(this);
+
         $.ajax({
             type: 'POST',
             url: controller_link,
@@ -31,8 +33,11 @@ $(document).ready(function() {
               value : this.value,
               checked : this.checked
             },
-            success: function(jsonData)
+            success: function(response)
             {
+                if(!response[0]) {
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                } 
             }
         });
     })
