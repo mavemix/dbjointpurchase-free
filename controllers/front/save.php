@@ -75,7 +75,7 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
                 return false;
             }
             
-            return $results;
+            return array_filter($results);
     }
 
     /**
@@ -126,7 +126,7 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
     private function pushJoint($joints, $id_joint)
     {
         foreach($joints as $index => $joint) {
-            if(empty($joint)) {
+            if($joint == 0) {
                 $sql = "UPDATE `" . _DB_PREFIX_ . "dbjointpurchase_joints` SET `".$index."`  = '".$id_joint."'";
                 return Db::getInstance()->execute($sql);
             }
@@ -148,7 +148,7 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
                 return Db::getInstance()->execute($sql);
             }
             if($joint == $id_joint) {
-                $sql = "UPDATE `" . _DB_PREFIX_ . "dbjointpurchase_joints` SET `".$index."`  = ''";
+                $sql = "UPDATE `" . _DB_PREFIX_ . "dbjointpurchase_joints` SET `".$index."`  = 0";
                 return Db::getInstance()->execute($sql);
             }
             $last = false;
