@@ -30,14 +30,21 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
 
     public function displayAjax()
     {
-        // Consultar a la BD si existe entrada para el producto 
-        // Existe:
-        //      Recuperamos el registro y lo actualizamos, si se queda vacío lo eliminamos
-        // No existe:
-        //      Lo creamos con el valor recibido
-
-        $checked = Tools::getValue('checked') === "true";
-        echo json_encode([$this->setJoint(Tools::getValue('product'), Tools::getValue('value'), $checked)]);
+        $action = Tools::getValue('action');
+        $products = Tools::getValue('joints');
+        $id_product = Tools::getValue('product');
+        
+        if($action == 'charge') {
+            foreach($products as $product) {
+                echo '<li><div class="checkbox_joint"><label><input class = "jointCheckbox" type="checkbox"';
+                echo 'value="' . $product[0]['id_product'] . '">' . $product[0]['id_product'];
+                echo '</label></div></li>';
+            }
+        }
+        elseif ($action = 'check') {
+            $checked = Tools::getValue('checked') === "true";
+            echo json_encode([$this->setJoint(Tools::getValue('product'), Tools::getValue('value'), $checked)]);
+        }
 
         
     }

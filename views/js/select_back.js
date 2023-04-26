@@ -1,22 +1,32 @@
 $(document).ready(function() {
+
     let tab = $('#related-product').parent();
-    
-    let titulo = $('<h2>Comprados juntos habitualmente</h2>');
-
+    let titulo = $('<h2>Comprados juntos habitualmente</h2><p>Personaliza los productos que quieres que se recomienden con este producto</p>');
     let container = $('<ul class="category-tree"></ul>');
-
-    let contenido = "";
-
-    products_cat.forEach(products => {
-        products.forEach(product => {
-            contenido += '<li><div class="checkbox"><label><input class = "jointCheckbox" type="checkbox" ';
-            contenido += 'value="' + product.id_product + '">' + product.name;
-            contenido += '</label></div></li>';
-        })
-    });
     
-    tab.append(titulo);
-    tab.append(container.append(contenido));
+    $.ajax({
+        type: 'POST',
+        url: controller_link,
+        dataType: 'html',
+        async: true,
+        data: {
+          ajax : true,
+          product : product,
+          joints: products_cat,
+          value : this.value,
+          checked : this.checked,
+          action : 'charge'
+        },
+        success: function(response)
+        {   
+            tab.append(titulo);
+            tab.append(container.append(response));
+        },
+        error: function(response)
+        {
+            tab.append("No se pueden cargar los productos");
+        }
+    });
 
     $(document).on('click', '.jointCheckbox', function() {
 
@@ -30,13 +40,17 @@ $(document).ready(function() {
             data: {
               ajax : true,
               product : product,
+              joints: products_cat,
               value : this.value,
-              checked : this.checked
+              checked : this.checked,
+              action : 'check'
             },
             success: function(response)
             {
                 if(!response[0]) {
                     checkbox.prop('checked', !checkbox.prop('checked'));
+                    error.css('font-color', 'red');
+
                 } 
             }
         });
