@@ -277,6 +277,15 @@ class Dbjointpurchase extends Module
         return $this->hookDisplayFooterProduct($params);
     }
 
+    /**
+     * Devuelve los 3 productos más vendidos junto al producto dato, y si no los hubiera,
+     * los más vendidos globalmente.
+     * 
+     * @param int   $id_product         El id del producto sobre el que buscar el top ventas
+     * @param bool  $force_top_sellers  Si está a true, devuelve los 3 top ventas global
+     * 
+     * @return false|array              Array indexado por categorías/posicion o false si no hay resultados
+     */
     public function getProductsGenerate($id_product, $force_top_sellers = false)
     {
         $excludes = $this->getProductsExcludes();
@@ -293,9 +302,9 @@ class Dbjointpurchase extends Module
                 WHERE od.product_id > 0 
                 AND od.product_id <> '$id_product' 
                 AND od.id_order IN (SELECT id_order 
-                FROM " . _DB_PREFIX_ . "order_detail 
-                WHERE product_id = '$id_product' 
-                GROUP BY id_order)
+                    FROM " . _DB_PREFIX_ . "order_detail 
+                    WHERE product_id = '$id_product' 
+                    GROUP BY id_order)
                 AND p.active = 1 
                 AND p.available_for_order = 1  
                 AND p.visibility != 'none' 
@@ -460,17 +469,19 @@ class Dbjointpurchase extends Module
         $idProduct = $request->get('id');
         $idLang = $this->context->language->id;
 
-        // Obtenemos los productos candidatos a ser elegidos
-        $products = [];
-        if(($products_cat = $this->getProductsGenerate($idProduct))===false) {
-            return;
-        }
-        
-        foreach ($products_cat as $cat => $product) {
-            $products[$cat]
-        }
+        // Obtenemos los productos candidatos a ser elegidos:
+        //  - Productos que genera el módulo
+        //  - Productos Top ventas 
+        $products_cat = $this->getProductsGenerate($idProduct);
+        $products_top = $this->getProductsGenerate($idProduct, true);
 
-        Media::addJsDef([   'products_cat' => $products_cat, 
+        // Construimos un array de todos los productos indexados por su id_product
+        $products_cat = $this->getProductsByTag($products_cat, "cat");
+        $products_top = $this->getProductsByTag($products_cat, "top");
+
+        $productos = array_merge($products_cat, $products_top);
+        
+        Media::addJsDef([   'productos' => $productos, 
                             'controller_link' => $controller_link, 
                             'product' => $idProduct,
                             'id_lang' => $idLang
@@ -478,5 +489,28 @@ class Dbjointpurchase extends Module
 
         $this->context->controller->addJS($this->local_path . 'views/js/select_back.js');
         $this->context->controller->addCSS($this->local_path . 'views/css/select_back.css');
+    }
+
+    /**
+     * Devuelve un array indexado por los id_product, conteniendo el tag indicado como valor
+     * 
+     * @param $products_tag     array indexado por un valor de tag
+     * @param $tag              etiqueta que se asignará como valor de todos los productos
+     * 
+     * @return false|array      Si no existe el índice de algun producto devuelve false
+     */
+    public function getProductsByTag($products_tag, $tag)
+    {
+        if(empty($product_tag)) {
+            return [];
+        }
+        foreach ($products_tag as $products) {
+            foreach($products as $product) {
+                if(!isset($product['id_product'])) {
+                    return false;
+                }
+                $productos[$product['id_product']] = $tag;
+            }
+        }
     }
 }
