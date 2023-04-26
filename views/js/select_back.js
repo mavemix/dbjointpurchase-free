@@ -38,7 +38,7 @@ $(document).ready(function() {
             data: {
               ajax : true,
               product : product,
-              joints: products_cat,
+              joints: joints,
               value : this.value,
               checked : this.checked,
               action : 'check'

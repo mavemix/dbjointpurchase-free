@@ -35,9 +35,10 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
         $id_product = Tools::getValue('product');
         
         if($action == 'charge') {
-            foreach($products as $product) {
+            foreach($products as $id => $value) {
+                $prod = new Product($id,false,$this->context->language->id);
                 echo '<li><div class="checkbox_joint"><label><input class = "jointCheckbox" type="checkbox"';
-                echo 'value="' . $product[0]['id_product'] . '">' . $product[0]['id_product'];
+                echo 'value="' . $id . '" '.$value.'>' . $prod->name;
                 echo '</label></div></li>';
             }
         }
