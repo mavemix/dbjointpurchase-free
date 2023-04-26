@@ -43,8 +43,11 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
         if($action == 'charge') {
             foreach($products as $id => $value) {
                 $prod = new Product($id,false,$this->context->language->id);
+                $image = new Image(Product::getCover($id)['id_image']);
+                $path = '/img/p/' . $image->getExistingImgPath() . '.' . $image->image_format;
+                
                 echo '<li><div class="checkbox_joint"><label><input class = "jointCheckbox" type="checkbox"';
-                echo 'value="' . $id . '" '.$value.'>' . $prod->name;
+                echo 'value="' . $id . '" '.$value.'><img class="dbjoint_img" src="'.$path.'">' . $prod->name;
                 echo '</label></div></li>';
             }
         }
