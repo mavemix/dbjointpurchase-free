@@ -12,9 +12,7 @@ $(document).ready(function() {
         data: {
           ajax : true,
           product : product,
-          joints: products_cat,
-          value : this.value,
-          checked : this.checked,
+          joints: joints,
           action : 'charge'
         },
         success: function(response)

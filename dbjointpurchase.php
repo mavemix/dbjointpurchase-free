@@ -467,24 +467,24 @@ class Dbjointpurchase extends Module
         $requestStack = $kernel->getContainer()->get('request_stack');
         $request = $requestStack->getCurrentRequest();
         $idProduct = $request->get('id');
-        $idLang = $this->context->language->id;
 
         // Obtenemos los productos candidatos a ser elegidos:
         //  - Productos que genera el módulo
         //  - Productos Top ventas 
         $products_cat = $this->getProductsGenerate($idProduct);
         $products_top = $this->getProductsGenerate($idProduct, true);
-
+        
         // Construimos un array de todos los productos indexados por su id_product
         $products_cat = $this->getProductsByTag($products_cat, "cat");
-        $products_top = $this->getProductsByTag($products_cat, "top");
-
-        $productos = array_merge($products_cat, $products_top);
+    
+        $products_top = $this->getProductsByTag($products_top, "top");
         
-        Media::addJsDef([   'productos' => $productos, 
+        // Unimos los arrays para evitar duplicados
+        $productos = $products_cat + $products_top;
+        
+        Media::addJsDef([   'joints' => $productos, 
                             'controller_link' => $controller_link, 
                             'product' => $idProduct,
-                            'id_lang' => $idLang
                         ]);
 
         $this->context->controller->addJS($this->local_path . 'views/js/select_back.js');
@@ -501,9 +501,10 @@ class Dbjointpurchase extends Module
      */
     public function getProductsByTag($products_tag, $tag)
     {
-        if(empty($product_tag)) {
+        if(empty($products_tag)) {
             return [];
         }
+        $productos = [];
         foreach ($products_tag as $products) {
             foreach($products as $product) {
                 if(!isset($product['id_product'])) {
@@ -512,5 +513,6 @@ class Dbjointpurchase extends Module
                 $productos[$product['id_product']] = $tag;
             }
         }
+        return $productos;
     }
 }
