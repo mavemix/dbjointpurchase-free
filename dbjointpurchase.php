@@ -277,77 +277,80 @@ class Dbjointpurchase extends Module
         return $this->hookDisplayFooterProduct($params);
     }
 
-    public function getProductsGenerate($id_product)
+    public function getProductsGenerate($id_product, $force_top_sellers = false)
     {
         $excludes = $this->getProductsExcludes();
 
         $products = [];
-        $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
+
+        if(!$force_top_sellers) {
+
+            $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
                 FROM " . _DB_PREFIX_ . "order_detail od 
                 LEFT JOIN " . _DB_PREFIX_ . "product_shop p ON od.product_id = p.id_product
                 " . Shop::addSqlAssociation('product', 'p') . "
                 " . Product::sqlStock('p', 0) . "
                 WHERE od.product_id > 0 
-                    AND od.product_id <> '$id_product' 
-                    AND od.id_order IN (SELECT id_order 
-                                        FROM " . _DB_PREFIX_ . "order_detail 
-                                        WHERE product_id = '$id_product' 
-                                        GROUP BY id_order)
-                    AND p.active = 1 
-                    AND p.available_for_order = 1  
-                    AND p.visibility != 'none' 
-                    AND p.price > 0
-                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
-        if (!empty($excludes)) {
-            $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
-        }
-        $sql .= "GROUP BY p.id_category_default
-                HAVING COUNT(*) > 1 
-                ORDER BY total DESC
-                LIMIT 3";
-        $results = Db::getInstance()->ExecuteS($sql);
-        if (count($results) >= 1) {
-            foreach ($results as $row) {
-                $products[$row['id_category_default']][] = array(
-                    'id_product' => $row['product_id'],
-                    'price' => $row['price'],
-                );
-            }
-
-            return $products;
-        } else {
-            //$product = new Product($id_product);
-            //$id_category_default = $product->id_category_default;
-
-            // Si no hay productos relacionados en los pedidos buscamos el top ventas de la categoria asociada
-            $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
-                FROM " . _DB_PREFIX_ . "order_detail od
-                LEFT JOIN " . _DB_PREFIX_ . "product p ON od.product_id = p.id_product
-                LEFT JOIN " . _DB_PREFIX_ . "product_shop ps ON od.product_id = ps.id_product
-                " . Shop::addSqlAssociation('product', 'p') . "
-                " . Product::sqlStock('p', 0) . "
-                WHERE ps.active = 1 
-                    AND p.available_for_order = 1  
-                    AND p.visibility != 'none' 
-                    AND p.price > 0
-                    AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
+                AND od.product_id <> '$id_product' 
+                AND od.id_order IN (SELECT id_order 
+                FROM " . _DB_PREFIX_ . "order_detail 
+                WHERE product_id = '$id_product' 
+                GROUP BY id_order)
+                AND p.active = 1 
+                AND p.available_for_order = 1  
+                AND p.visibility != 'none' 
+                AND p.price > 0
+                AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
             if (!empty($excludes)) {
                 $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
             }
-            $sql .= " GROUP BY od.product_id 
-                HAVING COUNT(*) > 1 
-                ORDER BY total DESC
-                LIMIT 3";
+            $sql .= "GROUP BY p.id_category_default
+            HAVING COUNT(*) > 1 
+            ORDER BY total DESC
+            LIMIT 3";
             $results = Db::getInstance()->ExecuteS($sql);
             if (count($results) >= 1) {
-                foreach ($results as $key => $row) {
-                    $products[$key][] = array(
+                foreach ($results as $row) {
+                    $products[$row['id_category_default']][] = array(
                         'id_product' => $row['product_id'],
                         'price' => $row['price'],
                     );
                 }
+                
                 return $products;
             }
+        } 
+        //$product = new Product($id_product);
+        //$id_category_default = $product->id_category_default;
+
+        // Si no hay productos relacionados en los pedidos buscamos el top ventas de la categoria asociada
+        $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
+            FROM " . _DB_PREFIX_ . "order_detail od
+            LEFT JOIN " . _DB_PREFIX_ . "product p ON od.product_id = p.id_product
+            LEFT JOIN " . _DB_PREFIX_ . "product_shop ps ON od.product_id = ps.id_product
+            " . Shop::addSqlAssociation('product', 'p') . "
+            " . Product::sqlStock('p', 0) . "
+            WHERE ps.active = 1 
+                AND p.available_for_order = 1  
+                AND p.visibility != 'none' 
+                AND p.price > 0
+                AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
+        if (!empty($excludes)) {
+            $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
+        }
+        $sql .= " GROUP BY od.product_id 
+            HAVING COUNT(*) > 1 
+            ORDER BY total DESC
+            LIMIT 3";
+        $results = Db::getInstance()->ExecuteS($sql);
+        if (count($results) >= 1) {
+            foreach ($results as $key => $row) {
+                $products[$key][] = array(
+                    'id_product' => $row['product_id'],
+                    'price' => $row['price'],
+                );
+            }
+            return $products;
         }
         return false;
     }
@@ -458,7 +461,14 @@ class Dbjointpurchase extends Module
         $idLang = $this->context->language->id;
 
         // Obtenemos los productos candidatos a ser elegidos
-        $products_cat = array_values($this->getProductsGenerate($idProduct));
+        $products = [];
+        if(($products_cat = $this->getProductsGenerate($idProduct))===false) {
+            return;
+        }
+        
+        foreach ($products_cat as $cat => $product) {
+            $products[$cat]
+        }
 
         Media::addJsDef([   'products_cat' => $products_cat, 
                             'controller_link' => $controller_link, 
