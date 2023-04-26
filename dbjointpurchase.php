@@ -475,9 +475,9 @@ class Dbjointpurchase extends Module
         $products_top = $this->getProductsGenerate($idProduct, true);
         
         // Construimos un array de todos los productos indexados por su id_product
-        $products_cat = $this->getProductsByTag($products_cat, "cat");
+        $products_cat = $this->indexProductsById($products_cat);
     
-        $products_top = $this->getProductsByTag($products_top, "top");
+        $products_top = $this->indexProductsById($products_top);
         
         // Unimos los arrays para evitar duplicados
         $productos = $products_cat + $products_top;
@@ -495,11 +495,10 @@ class Dbjointpurchase extends Module
      * Devuelve un array indexado por los id_product, conteniendo el tag indicado como valor
      * 
      * @param $products_tag     array indexado por un valor de tag
-     * @param $tag              etiqueta que se asignará como valor de todos los productos
      * 
      * @return false|array      Si no existe el índice de algun producto devuelve false
      */
-    public function getProductsByTag($products_tag, $tag)
+    public function indexProductsById($products_tag)
     {
         if(empty($products_tag)) {
             return [];
@@ -510,7 +509,7 @@ class Dbjointpurchase extends Module
                 if(!isset($product['id_product'])) {
                     return false;
                 }
-                $productos[$product['id_product']] = $tag;
+                $productos[$product['id_product']] = "";
             }
         }
         return $productos;
