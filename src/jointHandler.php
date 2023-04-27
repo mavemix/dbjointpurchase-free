@@ -17,7 +17,10 @@ class JointHandler
     public static function getJointsByProduct($id_product, $front = false)
     {
         $sql = "SELECT id_joint1, id_joint2, id_joint3 FROM `" . _DB_PREFIX_ . "dbjointpurchase_joints` WHERE id_product = ".$id_product;
-        $results = array_filter(\Db::getInstance()->getRow($sql));
+        
+        $results = \Db::getInstance()->getRow($sql);
+
+        $front ?? $results = array_filter($results);
         
         if (!$results) {
             return false;
@@ -27,35 +30,32 @@ class JointHandler
             return $results;
         }
 
-        $sql = "SELECT od.product_id, count(od.product_id) as total, p.price, p.id_category_default
-        FROM " . _DB_PREFIX_ . "order_detail od
-        LEFT JOIN " . _DB_PREFIX_ . "product p ON od.product_id = p.id_product
-        LEFT JOIN " . _DB_PREFIX_ . "product_shop ps ON od.product_id = ps.id_product
+        $sql = "SELECT p.id_product, p.price, p.id_category_default
+        FROM " . _DB_PREFIX_ . "product p
+        LEFT JOIN " . _DB_PREFIX_ . "product_shop ps ON p.id_product = ps.id_product
         " . \Shop::addSqlAssociation('product', 'p') . "
         " . \Product::sqlStock('p', 0) . "
-        WHERE ps.active = 1 
+        WHERE p.id_product IN (".implode(",",$results).")
+            AND ps.active = 1 
             AND p.available_for_order = 1  
             AND p.visibility != 'none' 
             AND p.price > 0
-            AND (stock.out_of_stock = 1 OR stock.quantity > 0)";
-    if (!empty($excludes)) {
-        $sql .= " AND od.product_id NOT IN (" . $excludes . ")";
-    }
-    $sql .= " GROUP BY od.product_id 
-        HAVING COUNT(*) > 1 
-        ORDER BY total DESC
-        LIMIT 3";
-    $results = \Db::getInstance()->ExecuteS($sql);
-    if (count($results) >= 1) {
-        foreach ($results as $key => $row) {
-            $products[$key][] = array(
-                'id_product' => $row['product_id'],
-                'price' => $row['price'],
-            );
+            AND (stock.out_of_stock = 1 OR stock.quantity > 0)
+        ";
+
+        $products = [];
+        
+        $results = \Db::getInstance()->ExecuteS($sql);
+        if (count($results) >= 1) {
+            foreach ($results as $key => $row) {
+                $products[$key][] = array(
+                    'id_product' => $row['id_product'],
+                    'price' => $row['price'],
+                );
+            }
+            return $products;
         }
-        return $products;
-    }
-    return false;
+        return false;
 
             
     }
@@ -67,7 +67,6 @@ class JointHandler
     {
         $joints = self::getJointsByProduct($id_product);
         
-
         if(!$joints && !$status) {
             return true;
         }
