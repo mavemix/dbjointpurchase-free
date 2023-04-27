@@ -39,9 +39,12 @@ class DbJointPurchaseSaveModuleFrontController extends ModuleFrontController
         $products = Tools::getValue('joints');
         $id_product = Tools::getValue('product');
 
-        // Obtenemos productos ya seleccionados anteriormente (no nulos)
-        $selected = array_filter(JointHandler::getJointsByProduct($id_product));
+        // Obtenemos productos ya seleccionados anteriormente
+        $selected = JointHandler::getJointsByProduct($id_product);
         foreach ($selected as $id) {
+            if(!$id) {
+                continue;
+            }
             $products[$id] = "checked";
         }
         
