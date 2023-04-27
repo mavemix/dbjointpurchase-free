@@ -61,9 +61,16 @@ class JointHandler
     }
 
     /**
+     * Establece el estado de un joint del producto y lo crea/elimina/modifica en BD, si procede.
+     * Si el producto se queda sin joints, borra el registro en BD
      * 
+     * @param int $id_product
+     * @param int $id_joint
+     * @param bool $status
+     * 
+     * @return bool Devuelve false si ha habido error
      */
-    public static function setJoint($id_product, $id_joint, $status)
+    public static function setJoint($id_product, $id_joint, $status):bool
     {
         $joints = self::getJointsByProduct($id_product);
         
@@ -97,14 +104,21 @@ class JointHandler
             return true;
         }
 
+        // Eliminar joint
         return self::popJoint($id_product, $joints, $id_joint);
 
     }
 
     /**
      * Inserta un nuevo joint al producto (Si no hay hueco, retorna false)
+     * 
+     * @param int $id_product
+     * @param array $joints
+     * @param bool $id_joint
+     * 
+     * @return bool Devuelve false si ha habido error en BD
      */
-    public static function pushJoint($id_product, $joints, $id_joint)
+    public static function pushJoint($id_product, $joints, $id_joint):bool
     {
         foreach($joints as $index => $joint) {
             if($joint == 0) {
@@ -117,8 +131,14 @@ class JointHandler
 
     /**
      * Extrae un joint del producto (Si se queda vacío, eliminamos el producto en la tabla de joints)
+     * 
+     * @param int $id_product
+     * @param array $joints
+     * @param bool $id_joint
+     * 
+     * @return bool
      */
-    public static function popJoint($id_product, $joints, $id_joint)
+    public static function popJoint($id_product, $joints, $id_joint):bool
     {
         foreach($joints as $index => $joint) {
             if( ($joint == $id_joint) && (count(array_filter($joints))==1) ) {
