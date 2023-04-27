@@ -22,12 +22,14 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+include_once('src/jointHandler.php');
+
 use PrestaShop\PrestaShop\Adapter\Image\ImageRetriever;
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 use PrestaShop\PrestaShop\Core\Product\ProductListingPresenter;
 use PrestaShop\PrestaShop\Adapter\Product\ProductColorsRetriever;
 
-use Language;
+use mavemix\dbjointpurchase\JointHandler;
 
 class Dbjointpurchase extends Module
 {
@@ -243,6 +245,9 @@ class Dbjointpurchase extends Module
         $id_product = $params['product']->id;
         $key = 'dbjointpurchase|' . $id_product;
         $total_price = $params['product']->price_amount;
+
+        $products_selected = JointHandler::getJointsByProduct($id_product);
+
         $products_cat = $this->getProductsGenerate($id_product);
         if ($products_cat != false && $product['add_to_cart_url']) {
             if (!$this->isCached(
