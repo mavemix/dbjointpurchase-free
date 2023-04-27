@@ -470,13 +470,20 @@ class Dbjointpurchase extends Module
         {
             return;
         }
-        
+
         $controller_link = $this->context->link->getModuleLink($this->name, 'save');
 
         global $kernel;
         $requestStack = $kernel->getContainer()->get('request_stack');
         $request = $requestStack->getCurrentRequest();
         $idProduct = $request->get('id');
+
+        $msgs = [
+            'titleError' => $this->l('Error'),
+            'error' => $this->l('Not possible to select more than 3 products'),
+            'titleSuccess' => $this->l('Saved'),
+            'success' => $this->l('Current settings saved'),
+        ];
 
         // Obtenemos los productos candidatos a ser elegidos:
         //  - Productos que genera el módulo
@@ -495,6 +502,7 @@ class Dbjointpurchase extends Module
         Media::addJsDef([   'joints' => $productos, 
                             'controller_link' => $controller_link, 
                             'product' => $idProduct,
+                            'msgs' => $msgs,
                         ]);
 
         $this->context->controller->addJS($this->local_path . 'views/js/select_back.js');

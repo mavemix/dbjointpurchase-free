@@ -41,15 +41,25 @@ $(document).ready(function() {
               joints: joints,
               value : this.value,
               checked : this.checked,
-              action : 'check'
+              action : 'check',
+              msgs : msgs,
             },
             success: function(response)
             {
                 if(!response[0]) {
                     checkbox.prop('checked', !checkbox.prop('checked'));
-                    error.css('font-color', 'red');
-
-                } 
+                    $.growl.error({
+                        duration: 3000,
+                        title: msgs['titleError'],
+                        message: msgs['error'],
+                    });
+                } else {
+                    $.growl.notice({
+                        duration: 3000,
+                        title: msgs['titleSuccess'],
+                        message: msgs['success'],
+                    });
+                }
             }
         });
     })
