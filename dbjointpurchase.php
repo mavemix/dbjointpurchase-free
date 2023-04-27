@@ -246,9 +246,14 @@ class Dbjointpurchase extends Module
         $key = 'dbjointpurchase|' . $id_product;
         $total_price = $params['product']->price_amount;
 
-        $products_selected = JointHandler::getJointsByProduct($id_product);
-
-        $products_cat = $this->getProductsGenerate($id_product);
+        // Comprobamos si existe listado personalizado de productos para mostrar
+        $products_selected = JointHandler::getJointsByProduct($id_product, true);
+        if(!$products_selected) {
+            $products_cat = $this->getProductsGenerate($id_product); 
+        } else {
+            $products_cat = $products_selected;
+        }
+        
         if ($products_cat != false && $product['add_to_cart_url']) {
             if (!$this->isCached(
                 'module:dbjointpurchase/views/templates/hook/jointpurchase.tpl',
